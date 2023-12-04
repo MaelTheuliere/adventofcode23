@@ -1,3 +1,3 @@
-test_that("multiplication works", {
-  expect_equal(2 * 2, 4)
+test_that("f02a work on sample data", {
+  expect_equal(f02a(example_data_02()), 8)
 })
