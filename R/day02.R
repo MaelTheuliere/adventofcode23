@@ -82,20 +82,7 @@
 #' f02a(example_data_02())
 #' f02b()
 f02a <- function(x) {
-  ball<-tibble::tibble(color=c('red','green','blue'),max_number=c(12,13,14))
-
-  df <- readr::read_delim(x,delim=":",col_names = FALSE) %>%
-    purrr::set_names(c("game","result")) %>%
-    dplyr::mutate(result=stringr::str_split(result,pattern = ";")) %>%
-    tidyr::unnest_longer(result,indices_to = 'grab') %>%
-    dplyr::mutate(result=stringr::str_split(result,pattern = ",")) %>%
-    tidyr::unnest_longer(result) %>%
-    dplyr::mutate(result=stringr::str_trim(result,side='both'),
-           game = stringr::str_replace(game,"Game ","")) %>%
-    tidyr::separate(col='result',into=c("number","color"),' ') %>%
-    dplyr::left_join(ball) %>%
-    dplyr::mutate(number=as.numeric(number),
-           possible = ifelse(number>max_number,FALSE,TRUE))
+  df <- f02_helper(x)
   res <- df %>%
     dplyr::group_by(game) %>%
     dplyr::summarise(possible=min(possible)) %>%
@@ -109,11 +96,34 @@ f02a <- function(x) {
 #' @rdname day02
 #' @export
 f02b <- function(x) {
-
+  df <- f02_helper(x)
+  result <- df %>%
+    dplyr::group_by(game,color) %>%
+    dplyr::summarise(number=max(number)) %>%
+    dplyr::group_by(game) %>%
+    dplyr::summarise(number=prod(number)) %>%
+    dplyr::summarise(number=sum(number)) %>%
+    dplyr::pull(number)
+  return(result)
 }
 
 
 f02_helper <- function(x) {
+  ball<-tibble::tibble(color=c('red','green','blue'),max_number=c(12,13,14))
+
+  df <- readr::read_delim(x,delim=":",col_names = FALSE) %>%
+    purrr::set_names(c("game","result")) %>%
+    dplyr::mutate(result=stringr::str_split(result,pattern = ";")) %>%
+    tidyr::unnest_longer(result,indices_to = 'grab') %>%
+    dplyr::mutate(result=stringr::str_split(result,pattern = ",")) %>%
+    tidyr::unnest_longer(result) %>%
+    dplyr::mutate(result=stringr::str_trim(result,side='both'),
+                  game = stringr::str_replace(game,"Game ","")) %>%
+    tidyr::separate(col='result',into=c("number","color"),' ') %>%
+    dplyr::left_join(ball) %>%
+    dplyr::mutate(number=as.numeric(number),
+                  possible = ifelse(number>max_number,FALSE,TRUE))
+  return(df)
 
 }
 
